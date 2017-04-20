@@ -1,0 +1,677 @@
+{
+	"variables": [],
+	"info": {
+		"name": "Boot Strap New BIG-IP via iWorkflow",
+		"_postman_id": "535dd823-1973-fe9f-518c-5c2c525dd2cb",
+		"description": "",
+		"schema": "https://schema.getpostman.com/json/collection/v2.0.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "1. Auth and Token Setup",
+			"description": "",
+			"item": [
+				{
+					"name": "Get BIG-IP Auth Token",
+					"request": {
+						"url": "https://{{big_ip_a_mgmt}}/mgmt/shared/authn/login",
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"description": ""
+							},
+							{
+								"key": "Authorization",
+								"value": "Basic YWRtaW46YWRtaW4=",
+								"description": ""
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"username\":\"admin\",\n    \"password\":\"admin\",\n    \"loginProviderName\":\"tmos\"\n}"
+						},
+						"description": ""
+					},
+					"response": []
+				},
+				{
+					"name": "Verify BIG-IP Authentication Works",
+					"request": {
+						"url": "https://{{big_ip_a_mgmt}}/mgmt/tm/ltm",
+						"method": "GET",
+						"header": [
+							{
+								"key": "X-F5-Auth-Token",
+								"value": "",
+								"description": ""
+							}
+						],
+						"body": {},
+						"description": ""
+					},
+					"response": []
+				},
+				{
+					"name": "Set Authentication Token Timeout",
+					"request": {
+						"url": "https://{{big_ip_a_mgmt}}/mgmt/shared/authz/tokens/{{big_ip_a_auth_token}}",
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"description": ""
+							},
+							{
+								"key": "X-F5-Auth-Token",
+								"value": "{{big_ip_a_auth_token}}",
+								"description": ""
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"timeout\":\"36000\"\n}"
+						},
+						"description": ""
+					},
+					"response": []
+				},
+				{
+					"name": "Get iWorkflow Auth Token",
+					"request": {
+						"url": "https://{{iworkflow_mgmt}}/mgmt/shared/authn/login",
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Basic YWRtaW46YWRtaW4=",
+								"description": ""
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"description": ""
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"username\":\"admin\",\n    \"password\":\"admin\",\n    \"loginProvidername\":\"tmos\"\n}"
+						},
+						"description": ""
+					},
+					"response": []
+				},
+				{
+					"name": "Verify iWorkflow Authentication Works",
+					"request": {
+						"url": "https://{{iworkflow_mgmt}}/mgmt/shared/authz/tokens",
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"description": ""
+							},
+							{
+								"key": "X-F5-Auth-Token",
+								"value": "",
+								"description": ""
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"username\":\"admin\",\n    \"password\":\"admin\"\n}"
+						},
+						"description": ""
+					},
+					"response": []
+				},
+				{
+					"name": "Set iWorkflow Authentication Token Timeout",
+					"request": {
+						"url": "https://{{iworkflow_mgmt}}/mgmt/shared/authz/tokens/{{iworkflow_auth_token}}",
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"description": ""
+							},
+							{
+								"key": "X-F5-Auth-Token",
+								"value": "{{iworkflow_auth_token}}",
+								"description": ""
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"timeout\":\"36000\"\n}"
+						},
+						"description": ""
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "2. Setup BIG-IP on iWorkflow",
+			"description": "",
+			"item": [
+				{
+					"name": "Get Discovered Devices",
+					"request": {
+						"url": "https://{{iworkflow_mgmt}}/mgmt/shared/resolver/device-groups/cm-cloud-managed-devices/devices",
+						"method": "GET",
+						"header": [
+							{
+								"key": "X-F5-Auth-Token",
+								"value": "{{iworkflow_auth_token}}",
+								"description": ""
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"description": ""
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"description": ""
+					},
+					"response": []
+				},
+				{
+					"name": "Discover BIG-IP Device",
+					"request": {
+						"url": "https://{{iworkflow_mgmt}}/mgmt/shared/resolver/device-groups/cm-cloud-managed-devices/devices",
+						"method": "POST",
+						"header": [
+							{
+								"key": "X-F5-Auth-Token",
+								"value": "{{iworkflow_auth_token}}",
+								"description": ""
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"description": ""
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"address\":\"{{big_ip_a_mgmt}}\",\n    \"automaticallyUpdateFramework\":true,\n    \"properties\": {\n        \"isRestProxyEnabled\":true,\n        \"isSoapProxyEnabled\":true, \n        \"isTmshProxyEnabled\":false,\n        \"dmaConfigPathScope\":\"basic\"\n    },\n    \"rootUser\":\"root\",\n    \"userName\":\"admin\",\n    \"password\":\"admin\"\n}"
+						},
+						"description": ""
+					},
+					"response": []
+				},
+				{
+					"name": "Get Local Connectors",
+					"request": {
+						"url": "https://{{iworkflow_mgmt}}/mgmt/cm/cloud/connectors/local",
+						"method": "GET",
+						"header": [
+							{
+								"key": "X-F5-Auth-Token",
+								"value": "{{iworkflow_auth_token}}",
+								"description": ""
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"description": ""
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\":\"BIG-IP A&B Connector\",\n    \"description\":\"Local Connector for the BIG-IP A/B Cluster\",\n    \"deviceReferences\": [\n        {\"link\":\"https://localhost/mgmt/shared/resolver/device-groups/cm-cloud-managed-devices/devices/<YOUR_DEVICE_UUID>\"}\n    ]\n}"
+						},
+						"description": ""
+					},
+					"response": []
+				},
+				{
+					"name": "Create a Local Connector",
+					"request": {
+						"url": "https://{{iworkflow_mgmt}}/mgmt/cm/cloud/connectors/local",
+						"method": "POST",
+						"header": [
+							{
+								"key": "X-F5-Auth-Token",
+								"value": "{{iworkflow_auth_token}}",
+								"description": ""
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"description": ""
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\":\"BIG-IP A&B Connector\",\n    \"description\":\"Local Connector for the BIG-IP A/B Cluster\",\n    \"deviceReferences\": [\n        {\"link\":\"https://localhost/mgmt/shared/resolver/device-groups/cm-cloud-managed-devices/devices/{{iworkflow_big_ip_a_uuid}}\"}\n    ]\n}"
+						},
+						"description": ""
+					},
+					"response": []
+				},
+				{
+					"name": "Get Tenants",
+					"request": {
+						"url": "https://{{iworkflow_mgmt}}/mgmt/cm/cloud/tenants/",
+						"method": "GET",
+						"header": [
+							{
+								"key": "X-F5-Auth-Token",
+								"value": "{{iworkflow_auth_token}}",
+								"description": ""
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"description": ""
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"cloudConnectorReferences\": [\n        {\"link\":\"https://localhost/mgmt/cm/cloud/connectors/local/{{iworkflow_connector_uuid}}\"}\n    ]\n}"
+						},
+						"description": ""
+					},
+					"response": []
+				},
+				{
+					"name": "Assign Connector to Tenant",
+					"request": {
+						"url": "https://{{iworkflow_mgmt}}/mgmt/cm/cloud/tenants/MyTenant/",
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "X-F5-Auth-Token",
+								"value": "{{iworkflow_auth_token}}",
+								"description": ""
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"description": ""
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"cloudConnectorReferences\": [\n        {\"link\":\"https://localhost/mgmt/cm/cloud/connectors/local/{{iworkflow_connector_uuid}}\"}\n    ]\n}"
+						},
+						"description": ""
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "3. Device Settings",
+			"description": "",
+			"item": [
+				{
+					"name": "Disable GUI Setup",
+					"request": {
+						"url": "https://{{big_ip_a_mgmt}}/mgmt/tm/sys/global-settings",
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "X-F5-Auth-Token",
+								"value": "{{big_ip_a_auth_token}}",
+								"description": ""
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"description": ""
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"guiSetup\": \"disabled\",\n  \"hostname\": \"\"\n}"
+						},
+						"description": ""
+					},
+					"response": []
+				},
+				{
+					"name": "Set System DNS Settings",
+					"request": {
+						"url": "https://{{big_ip_a_mgmt}}/mgmt/tm/sys/dns",
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "X-F5-Auth-Token",
+								"value": "{{big_ip_a_auth_token}}",
+								"description": ""
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"description": ""
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"nameServers\": [\n    \"4.2.2.2\",\n    \"8.8.8.8\"\n  ],\n  \"search\": [\n    \"localhost\"\n  ]\n}"
+						},
+						"description": ""
+					},
+					"response": []
+				},
+				{
+					"name": "Set System NTP Settings",
+					"request": {
+						"url": "https://{{big_ip_a_mgmt}}/mgmt/tm/sys/ntp",
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "X-F5-Auth-Token",
+								"value": "{{big_ip_a_auth_token}}",
+								"description": ""
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"description": ""
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"servers\": [\n    \"0.pool.ntp.org\",\n    \"1.pool.ntp.org\"\n  ],\n  \"timezone\": \"America/Vancouver\"\n}"
+						},
+						"description": ""
+					},
+					"response": []
+				},
+				{
+					"name": "Get License Pool UUID",
+					"request": {
+						"url": "https://{{iworkflow_mgmt}}/mgmt/cm/shared/licensing/pools",
+						"method": "GET",
+						"header": [
+							{
+								"key": "X-F5-Auth-Token",
+								"value": "{{iworkflow_auth_token}}",
+								"description": ""
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"description": ""
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"baseRegKey\":\"\",\n    \"addOnKeys\":[],\n    \"automaticActivation\":false\n}"
+						},
+						"description": ""
+					},
+					"response": []
+				},
+				{
+					"name": "Grant License from Pool to BIG-IP",
+					"request": {
+						"url": "https://{{iworkflow_mgmt}}//mgmt/cm/shared/licensing/pools/{{iworkflow_pool_uuid}}/members",
+						"method": "POST",
+						"header": [
+							{
+								"key": "X-F5-Auth-Token",
+								"value": "{{iworkflow_auth_token}}",
+								"description": ""
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"description": ""
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"deviceReference\": {\n        \"link\":\"https://localhost/mgmt/shared/resolver/device-groups/cm-cloud-managed-devices/devices/{{iworkflow_big_ip_a_uuid}}\"\n    }\n}"
+						},
+						"description": ""
+					},
+					"response": []
+				},
+				{
+					"name": "Get License Pool Grant Status",
+					"request": {
+						"url": "https://{{iworkflow_mgmt}}//mgmt/cm/shared/licensing/pools/{{iworkflow_pool_uuid}}/members",
+						"method": "GET",
+						"header": [
+							{
+								"key": "X-F5-Auth-Token",
+								"value": "{{iworkflow_auth_token}}",
+								"description": ""
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"description": ""
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"description": ""
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "4. Network Connectivity",
+			"description": "",
+			"item": [
+				{
+					"name": "Get VLAN on BIGIP",
+					"request": {
+						"url": "https://{{iworkflow_mgmt}}/mgmt/shared/resolver/device-groups/cm-cloud-managed-devices/devices/{{iworkflow_big_ip_a_uuid}}/rest-proxy/mgmt/tm/net/vlan/?expandSubcollections=true",
+						"method": "GET",
+						"header": [
+							{
+								"key": "X-F5-Auth-Token",
+								"value": "{{iworkflow_auth_token}}",
+								"description": ""
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"description": ""
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"rest_proxy_pool\",\n  \"partition\": \"Common\",\n  \"allowNat\": \"yes\",\n  \"allowSnat\": \"yes\",\n  \"loadBalancingMode\": \"round-robin\",\n  \"monitor\": \"/Common/http \"\n}"
+						},
+						"description": ""
+					},
+					"response": []
+				},
+				{
+					"name": "Create VLAN 10 on BIGIP",
+					"request": {
+						"url": "https://{{iworkflow_mgmt}}/mgmt/shared/resolver/device-groups/cm-cloud-managed-devices/devices/{{iworkflow_big_ip_a_uuid}}/rest-proxy/mgmt/tm/net/vlan/",
+						"method": "POST",
+						"header": [
+							{
+								"key": "X-F5-Auth-Token",
+								"value": "{{iworkflow_auth_token}}",
+								"description": ""
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"description": ""
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"vlan_10\",\n  \"partition\": \"Common\",\n  \"autoLasthop\": \"default\",\n  \"cmpHash\": \"default\",\n  \"mtu\": \"1500\",\n  \"tag\": \"10\",\n  \"interfaces\": \n    [ \n        {\n            \"name\":\"1.1\",\n            \"tagged\":false\n        }\n    ]\n}"
+						},
+						"description": ""
+					},
+					"response": []
+				},
+				{
+					"name": "Create VLAN 20 on BIGIP",
+					"request": {
+						"url": "https://{{iworkflow_mgmt}}/mgmt/shared/resolver/device-groups/cm-cloud-managed-devices/devices/{{iworkflow_big_ip_a_uuid}}/rest-proxy/mgmt/tm/net/vlan/",
+						"method": "POST",
+						"header": [
+							{
+								"key": "X-F5-Auth-Token",
+								"value": "{{iworkflow_auth_token}}",
+								"description": ""
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"description": ""
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"vlan_20\",\n  \"partition\": \"Common\",\n  \"autoLasthop\": \"default\",\n  \"cmpHash\": \"default\",\n  \"mtu\": \"1500\",\n  \"tag\": \"20\",\n  \"interfaces\": \n    [ \n        {\n            \"name\":\"1.2\",\n            \"tagged\":false\n        }\n    ]\n}"
+						},
+						"description": ""
+					},
+					"response": []
+				},
+				{
+					"name": "Get SelfIP on BIGIP",
+					"request": {
+						"url": "https://{{iworkflow_mgmt}}/mgmt/shared/resolver/device-groups/cm-cloud-managed-devices/devices/{{iworkflow_big_ip_a_uuid}}/rest-proxy/mgmt/tm/net/self/?expandSubcollections=true",
+						"method": "GET",
+						"header": [
+							{
+								"key": "X-F5-Auth-Token",
+								"value": "{{iworkflow_auth_token}}",
+								"description": ""
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"description": ""
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"rest_proxy_pool\",\n  \"partition\": \"Common\",\n  \"allowNat\": \"yes\",\n  \"allowSnat\": \"yes\",\n  \"loadBalancingMode\": \"round-robin\",\n  \"monitor\": \"/Common/http \"\n}"
+						},
+						"description": ""
+					},
+					"response": []
+				},
+				{
+					"name": "Create SelfIP 10.127.10.202 on BIGIP",
+					"request": {
+						"url": "https://{{iworkflow_mgmt}}/mgmt/shared/resolver/device-groups/cm-cloud-managed-devices/devices/{{iworkflow_big_ip_a_uuid}}/rest-proxy/mgmt/tm/net/self/",
+						"method": "POST",
+						"header": [
+							{
+								"key": "X-F5-Auth-Token",
+								"value": "{{iworkflow_auth_token}}",
+								"description": ""
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"description": ""
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n   \"name\": \"10.127.10.202\",\n   \"partition\": \"Common\",\n   \"address\": \"10.127.10.202/24\",\n   \"floating\": \"disabled\",\n   \"trafficGroup\": \"/Common/traffic-group-local-only\",\n   \"vlan\": \"/Common/vlan_10\",\n   \"allowService\": [\n     \"default\"\n   ]\n}"
+						},
+						"description": ""
+					},
+					"response": []
+				},
+				{
+					"name": "Create SelfIP 10.127.20.202 on BIGIP",
+					"request": {
+						"url": "https://{{iworkflow_mgmt}}/mgmt/shared/resolver/device-groups/cm-cloud-managed-devices/devices/{{iworkflow_big_ip_a_uuid}}/rest-proxy/mgmt/tm/net/self/",
+						"method": "POST",
+						"header": [
+							{
+								"key": "X-F5-Auth-Token",
+								"value": "{{iworkflow_auth_token}}",
+								"description": ""
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"description": ""
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n   \"name\": \"10.127.10.202\",\n   \"partition\": \"Common\",\n   \"address\": \"10.127.10.202/24\",\n   \"floating\": \"disabled\",\n   \"trafficGroup\": \"/Common/traffic-group-local-only\",\n   \"vlan\": \"/Common/vlan_10\",\n   \"allowService\": [\n     \"default\"\n   ]\n}"
+						},
+						"description": ""
+					},
+					"response": []
+				},
+				{
+					"name": "Get Routes on BIG-IP",
+					"request": {
+						"url": "https://{{iworkflow_mgmt}}/mgmt/shared/resolver/device-groups/cm-cloud-managed-devices/devices/{{iworkflow_big_ip_a_uuid}}/rest-proxy/mgmt/tm/net/route/?expandSubcollections=true",
+						"method": "GET",
+						"header": [
+							{
+								"key": "X-F5-Auth-Token",
+								"value": "{{iworkflow_auth_token}}",
+								"description": ""
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"description": ""
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"rest_proxy_pool\",\n  \"partition\": \"Common\",\n  \"allowNat\": \"yes\",\n  \"allowSnat\": \"yes\",\n  \"loadBalancingMode\": \"round-robin\",\n  \"monitor\": \"/Common/http \"\n}"
+						},
+						"description": ""
+					},
+					"response": []
+				},
+				{
+					"name": "Create Default Route on BIG-IP",
+					"request": {
+						"url": "https://{{iworkflow_mgmt}}/mgmt/shared/resolver/device-groups/cm-cloud-managed-devices/devices/{{iworkflow_big_ip_a_uuid}}/rest-proxy/mgmt/tm/net/route/?expandSubcollections=true",
+						"method": "POST",
+						"header": [
+							{
+								"key": "X-F5-Auth-Token",
+								"value": "{{iworkflow_auth_token}}",
+								"description": ""
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"description": ""
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"default_gw\",\n  \"partition\": \"Common\",\n  \"gw\": \"10.127.10.1\",\n  \"mtu\": 0,\n  \"network\": \"0.0.0.0/0\"\n}"
+						},
+						"description": ""
+					},
+					"response": []
+				}
+			]
+		}
+	]
+}
