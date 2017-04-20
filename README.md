@@ -14,3 +14,7 @@ So far this collection contains the REST calls for:
 - leveraging iWorkflow REST proxy to:
   - add VLANs to BIG-IP
   - add Self IPs to BIG-IP
+
+If you do not have experience with iWorkflow, REST APIs, or Postman, I suggest trying some of the exercises in this lab to get more familiar with the concepts.
+
+https://github.com/buulam/f5-automation-labs
